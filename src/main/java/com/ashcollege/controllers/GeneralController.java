@@ -1,76 +1,105 @@
 package com.ashcollege.controllers;
 
-import com.ashcollege.Persist;
-import com.ashcollege.entities.Product;
 import com.ashcollege.entities.User;
-import com.ashcollege.responses.BasicResponse;
 import com.ashcollege.responses.LoginResponse;
+import com.ashcollege.responses.RegisterResponse;
+import com.ashcollege.responses.UsernameAvailableResponse;
+import com.ashcollege.responses.UsersResponse;
 import com.ashcollege.utils.DbUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.annotation.PostConstruct;
 import java.util.List;
+import java.util.Random;
 
 import static com.ashcollege.utils.Errors.*;
 
 @RestController
 public class GeneralController {
 
+
     @Autowired
     private DbUtils dbUtils;
 
 
-    @RequestMapping(value = "/", method = {RequestMethod.GET, RequestMethod.POST})
-    public Object test () {
+    @RequestMapping("/")
+    public String test () {
         return "Hello From Server";
     }
 
+    @RequestMapping("/login")
+    public LoginResponse checkUser (String username, String password) {
 
-    @RequestMapping (value = "/login", method = {RequestMethod.GET, RequestMethod.POST})
-    public BasicResponse login (String username, String password) {
-        BasicResponse basicResponse = null;
-        boolean success = false;
+        String token = null;
         Integer errorCode = null;
-        if (username != null && username.length() > 0) {
-            if (password != null && password.length() > 0) {
-                User user = dbUtils.login(username, password);
-                if (user != null) {
-                    basicResponse = new LoginResponse(true, errorCode, user.getId(), user.getSecret());
+
+         if (!username.isEmpty() && !password.isEmpty()){
+             token = dbUtils.login(username, password);
+
+             if(token == null){
+                 errorCode = ERROR_NOT_EXIST_USER;
+             }
+         }else {
+             errorCode = ERROR_MISSING_FIELDS;
+         }
+
+        return new LoginResponse(token!=null ,errorCode ,token);
+    }
+
+    @RequestMapping("/register")
+    public RegisterResponse register (String username, String password, String repeat) {
+        boolean success =false;
+        Integer errorCode = null;
+        Integer id = null;
+        if (username != null) {
+            if (password != null) {
+                if (password.equals(repeat)) {
+                    if (usernameAvailable(username).isAvailable()) {
+                        User user = new User();
+                        user.setUsername(username);
+                        user.setPassword(password);
+                        dbUtils.registerUser(user);
+                        id = user.getId();
+                    } else {
+                        errorCode = ERROR_USERNAME_NOT_AVAILABLE;
+                    }
                 } else {
-                    errorCode = ERROR_LOGIN_WRONG_CREDS;
+                    errorCode = ERROR_PASSWORDS_DONT_MATCH;
                 }
             } else {
-                errorCode = ERROR_SIGN_UP_NO_PASSWORD;
+                errorCode = ERROR_MISSING_PASSWORD;
             }
         } else {
-            errorCode = ERROR_SIGN_UP_NO_USERNAME;
+            errorCode = ERROR_MISSING_USERNAME;
         }
-        if (errorCode != null) {
-            basicResponse = new BasicResponse(success, errorCode);
+        return new RegisterResponse(success, errorCode, id);
+    }
+
+    @RequestMapping("/username-available")
+    public UsernameAvailableResponse usernameAvailable (String username) {
+        boolean success = false;
+        Integer errorCode = null;
+        boolean available = false;
+        if (username != null) {
+            available = dbUtils.usernameAvailable(username);
+            success = true;
+        } else {
+            errorCode = ERROR_MISSING_USERNAME;
         }
-        return basicResponse;
+        return new UsernameAvailableResponse(success, errorCode, available);
+
     }
 
-    @RequestMapping (value = "add-user")
-    public boolean addUser (String username, String password) {
-        User userToAdd = new User(username, password);
-        return dbUtils.addUser(userToAdd);
-    }
-
-    @RequestMapping (value = "get-users")
-    public List<User> getUsers () {
-        return dbUtils.getAllUsers();
+    @RequestMapping("get-all-users")
+    public UsersResponse getAllUsers () {
+        List<User> allUsers = dbUtils.getAllUsers();
+        return new UsersResponse(allUsers);
     }
 
 
-    @RequestMapping (value = "add-product")
-    public boolean addProduct (String description, float price, int count) {
-        Product toAdd = new Product(description, price, count);
-        dbUtils.addProduct(toAdd);
-        return true;
-    }
+
+
+
 
 }
