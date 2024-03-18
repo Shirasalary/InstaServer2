@@ -34,7 +34,7 @@ public class GeneralController {
         String token = null;
         Integer errorCode = null;
 
-         if (!username.isEmpty() && !password.isEmpty()){
+         if ((username!=null&&password!=null) ||(!username.isEmpty() && !password.isEmpty())){
              token = dbUtils.login(username, password);
 
              if(token == null){
