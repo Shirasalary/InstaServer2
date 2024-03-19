@@ -19,7 +19,7 @@ public class DbUtils {
     public Connection createConnection () {
         try {
             Class.forName("com.mysql.jdbc.Driver");
-            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/new_data", Constants.DB_USERNAME, Constants.DB_PASSWORD);
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/data_instagram", Constants.DB_USERNAME, Constants.DB_PASSWORD);
             System.out.println("Connection success");
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
@@ -30,14 +30,18 @@ public class DbUtils {
     }
 
 
-    public void registerUser (User user) {
+    public String registerUser (User user) {
         try {
+            String token =getToken();
             PreparedStatement preparedStatement =
                     connection.prepareStatement(
-                            "INSERT INTO users (username, password) VALUE (?, ?)");
+                            "INSERT INTO users (username, password,token) VALUE (?, ?,?)");
             preparedStatement.setString(1, user.getUsername());
             preparedStatement.setString(2, user.getPassword());
+            preparedStatement.setString(3, token);
             preparedStatement.executeUpdate();
+            return token;
+
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -54,7 +58,7 @@ public class DbUtils {
 
             if (resultSet.next()){
 
-                token = String.valueOf(new Random().nextInt());
+                token = getToken();
                 int userId = resultSet.getInt("id");
                 updateToken(userId,token);
             }
@@ -62,6 +66,9 @@ public class DbUtils {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+    private String getToken(){
+        return String.valueOf(new Random().nextInt());
     }
 
 

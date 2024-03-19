@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Random;
 
 import static com.ashcollege.utils.Errors.*;
 
@@ -47,20 +46,17 @@ public class GeneralController {
         return new LoginResponse(token!=null ,errorCode ,token);
     }
 
-    @RequestMapping("/register")
-    public RegisterResponse register (String username, String password, String repeat) {
-        boolean success =false;
+    @RequestMapping("/signUp")
+    public RegisterResponse signUp(String username, String password, String repeat) {
         Integer errorCode = null;
-        Integer id = null;
+       String token =null;
         if (username != null) {
             if (password != null) {
                 if (password.equals(repeat)) {
                     if (usernameAvailable(username).isAvailable()) {
-                        User user = new User();
-                        user.setUsername(username);
-                        user.setPassword(password);
-                        dbUtils.registerUser(user);
-                        id = user.getId();
+                        User user = new User(username,password);
+                      token =  dbUtils.registerUser(user);
+
                     } else {
                         errorCode = ERROR_USERNAME_NOT_AVAILABLE;
                     }
@@ -73,7 +69,7 @@ public class GeneralController {
         } else {
             errorCode = ERROR_MISSING_USERNAME;
         }
-        return new RegisterResponse(success, errorCode, id);
+        return new RegisterResponse(token!=null, errorCode, token);
     }
 
     @RequestMapping("/username-available")

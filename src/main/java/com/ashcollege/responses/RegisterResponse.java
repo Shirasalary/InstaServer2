@@ -2,22 +2,20 @@
 package com.ashcollege.responses;
 
 public class RegisterResponse extends BasicResponse {
-    private Integer id;
+    private String token;
 
-    public RegisterResponse(Integer id) {
-        this.id = id;
-    }
 
-    public RegisterResponse(boolean success, Integer errorCode, Integer id) {
+
+    public RegisterResponse(boolean success, Integer errorCode, String token) {
         super(success, errorCode);
-        this.id = id;
+        this.token = token;
     }
 
-    public Integer getId() {
-        return id;
+    public String getToken() {
+        return token;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    public void setToken(String token) {
+        this.token = token;
     }
 }
