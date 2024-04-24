@@ -1,5 +1,6 @@
 package com.ashcollege.utils;
 
+import com.ashcollege.entities.Post;
 import com.ashcollege.entities.User;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +20,7 @@ public class DbUtils {
     public Connection createConnection () {
         try {
             Class.forName("com.mysql.jdbc.Driver");
-            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/data_instagram", Constants.DB_USERNAME, Constants.DB_PASSWORD);
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/new_data", Constants.DB_USERNAME, Constants.DB_PASSWORD);
             System.out.println("Connection success");
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
@@ -29,6 +30,52 @@ public class DbUtils {
         return connection;
     }
 
+    public List<Post> getAllUserPosts (String token) {
+        List<Post> allPosts = null;
+        try {
+            User user = getUser(token);
+            if (user != null){
+                allPosts = new ArrayList<>();
+                PreparedStatement preparedStatement = connection.prepareStatement(
+                        "SELECT * FROM posts WHERE user_id=?"
+                );
+                ResultSet resultSet = preparedStatement.executeQuery();
+                while (resultSet.next()) {
+                    Post post = new Post(resultSet.getInt("id"),
+                            resultSet.getInt("user_id"),
+                            resultSet.getString("text"));
+                    allPosts.add(post);
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return allPosts;
+    }
+
+
+    public User getUser (String token) {
+        try {
+            User result = null;
+            PreparedStatement preparedStatement =
+                    connection.prepareStatement(
+                            "SELECT * FROM users WHERE token=?");
+            preparedStatement.setString(1, token);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()){
+                result.setId(resultSet.getInt("id"));
+                result.setUsername(resultSet.getString("username"));
+                result.setPassword(null); //אין צורך בסיסמא,אבטחת מידע
+                result.setToken(resultSet.getString("token"));
+                result.setPictureUrl(resultSet.getString("pictureUrl"));
+            }
+            return result;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public String registerUser (User user) {
         try {

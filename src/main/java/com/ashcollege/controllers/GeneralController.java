@@ -1,10 +1,8 @@
 package com.ashcollege.controllers;
 
+import com.ashcollege.entities.Post;
 import com.ashcollege.entities.User;
-import com.ashcollege.responses.LoginResponse;
-import com.ashcollege.responses.RegisterResponse;
-import com.ashcollege.responses.UsernameAvailableResponse;
-import com.ashcollege.responses.UsersResponse;
+import com.ashcollege.responses.*;
 import com.ashcollege.utils.DbUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,7 +13,8 @@ import java.util.List;
 import static com.ashcollege.utils.Errors.*;
 
 @RestController
-public class GeneralController {
+public class
+GeneralController {
 
 
     @Autowired
@@ -46,8 +45,10 @@ public class GeneralController {
         return new LoginResponse(token!=null ,errorCode ,token);
     }
 
+
+    //TODO להוסיף בלקוח שיכניס גם תומנה ואז לשנות פה את הבנאי של היוזר
     @RequestMapping("/signUp")
-    public RegisterResponse signUp(String username, String password, String repeat) {
+    public LoginResponse signUp(String username, String password, String repeat) {
         Integer errorCode = null;
        String token =null;
         if (username != null) {
@@ -69,7 +70,7 @@ public class GeneralController {
         } else {
             errorCode = ERROR_MISSING_USERNAME;
         }
-        return new RegisterResponse(token!=null, errorCode, token);
+        return new LoginResponse(token!=null, errorCode, token);
     }
 
     @RequestMapping("/username-available")
@@ -87,14 +88,32 @@ public class GeneralController {
 
     }
 
-    @RequestMapping("get-all-users")
-    public UsersResponse getAllUsers () {
-        List<User> allUsers = dbUtils.getAllUsers();
-        return new UsersResponse(allUsers);
+    @RequestMapping("get-user-by-token")
+    public UserResponse getUserByToken (String token){
+        Integer error = null;
+         User user = this.dbUtils.getUser(token);
+         if (user==null){
+             error = ERROR_NOT_EXIST_USER;
+         }
+         return new UserResponse(user!=null,error,user );
     }
 
+    @RequestMapping("get-user-all-posts")
+    public ListGenericResponse<Post> getAllUserPosts (String token) {
+        Integer error = null;
+        List<Post> posts = this.dbUtils.getAllUserPosts(token);
+        if (posts == null) {
+            error = ERROR_NOT_EXIST_USER;
+        }
+        return new ListGenericResponse<Post>(posts != null, error, posts);
+    }
 
-
+//צריך להשתמש במחלקה הגנרית
+//    @RequestMapping("get-all-users")
+//    public AllUsersResponse getAllUsers () {
+//        List<User> allUsers = dbUtils.getAllUsers();
+//        return new AllUsersResponse(allUsers);
+//    }
 
 
 
