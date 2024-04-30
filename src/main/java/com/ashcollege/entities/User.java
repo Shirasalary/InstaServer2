@@ -22,10 +22,22 @@ public class User {
         this.pictureUrl = pictureUrl;
     }
 
+    public User(int id ,String username) {
+
+        this.username = username;
+        this.id = id;
+    }
     public User(String username, String password) {
 
         this.username = username;
         this.password = password;
+    }
+
+    public User(int id ,String username, String pictureUrl) {
+
+        this.username = username;
+        this.id = id;
+        this.pictureUrl = pictureUrl;
     }
     public int getId() {
         return id;
